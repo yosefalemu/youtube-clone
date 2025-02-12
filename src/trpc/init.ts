@@ -8,10 +8,6 @@ import { cache } from "react";
 import superjson from "superjson";
 export const createTRPCContext = cache(async () => {
   const { userId } = await auth();
-  if (!userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
-
   return { clerkUserId: userId };
 });
 
