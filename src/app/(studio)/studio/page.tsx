@@ -1,4 +1,4 @@
-import StudioView from "@/modules/studio/ui/view/studio-view";
+import StudioView from "@/modules/studio/ui/views/studio-view";
 import { trpc } from "@/trpc/server";
 import { HydrateClient } from "@/trpc/server";
 

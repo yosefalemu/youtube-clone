@@ -41,6 +41,7 @@ export const POST = async (request: Request) => {
       if (!data.upload_id) {
         return new Response("No upload id found", { status: 400 });
       }
+      // console.log({ "DATA WHILE VIDEO CREATED": data });
       await db
         .update(videos)
         .set({
@@ -62,6 +63,7 @@ export const POST = async (request: Request) => {
       const thumbnail_url = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
       const preview_url = `https://image.mux.com/${playbackId}/animated.gif`;
       const duration = data.duration ? Math.round(data.duration * 1000) : 0;
+      // console.log({ "DATA WHILE VIDEO ASSET READY": data });
       await db
         .update(videos)
         .set({
@@ -92,7 +94,26 @@ export const POST = async (request: Request) => {
       if (!data.upload_id) {
         return new Response("No upload id found", { status: 400 });
       }
+      // console.log({ "DATA WHILE DELETE VIDEO": data });
       await db.delete(videos).where(eq(videos.muxUploadId, data.upload_id));
+      break;
+    }
+    case "video.asset.track.ready": {
+      // I add assei_id since they left it out
+      const data = payload.data as VideoAssetTrackReadyWebhookEvent["data"] & {
+        asset_id: string;
+      };
+      const assetId = data.asset_id;
+      const trackId = data.id;
+      const status = data.status;
+      if (!assetId) {
+        return new Response("No asset id found", { status: 400 });
+      }
+      console.log("DATA WHILE FETCHING TRACK READY", data);
+      await db
+        .update(videos)
+        .set({ muxTrackId: trackId, muxTrackStatus: status })
+        .where(eq(videos.muxAssetId, assetId));
       break;
     }
   }
