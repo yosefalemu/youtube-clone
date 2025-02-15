@@ -13,7 +13,6 @@ export default function VideoThumbnail({
   title,
   duration,
 }: VideoThumbnailProps) {
-  console.log({ title });
   return (
     <div className="relative group">
       <div className="relative w-full overflow-hidden rounded-xl aspect-video">

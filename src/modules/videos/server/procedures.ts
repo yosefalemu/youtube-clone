@@ -4,6 +4,7 @@ import { mux } from "@/lib/mux";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 
 export const videosRouter = createTRPCRouter({
   create: protectedProcedure.mutation(async ({ ctx }) => {
@@ -59,5 +60,57 @@ export const videosRouter = createTRPCRouter({
           message: "Video not found",
         });
       }
+      return updatedVideo;
+    }),
+  remove: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+      const { id } = input;
+      const [removedVideo] = await db
+        .delete(videos)
+        .where(and(eq(videos.id, id), eq(videos.userId, userId)))
+        .returning();
+      if (!removedVideo) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video not found",
+        });
+      }
+      return removedVideo;
+    }),
+  restoreThumbnailUrl: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+      const { id } = input;
+      const [exstingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, id), eq(videos.userId, userId)));
+      if (!exstingVideo) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+        });
+      }
+      if (!exstingVideo.muxPlaybackId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+        });
+      }
+      const thumbnail_url = `https://image.mux.com/${exstingVideo.muxPlaybackId}/thumbnail.jpg`;
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({
+          thumbnailUrl: thumbnail_url,
+        })
+        .where(and(eq(videos.id, id), eq(videos.userId, userId)))
+        .returning();
+      if (!updatedVideo) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+        });
+      }
+      return updatedVideo;
     }),
 });

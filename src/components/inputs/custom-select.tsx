@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { cn } from "@/lib/utils";
+import { cn, snakeCase } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
 interface CustomSelectProps {
   fieldTitle?: string;
@@ -15,7 +16,7 @@ interface CustomSelectProps {
   placeHolder: string;
   className?: string;
   triggerClassName?: string;
-  data: { id: string; name: string; image?: string }[];
+  data: { id: string; name: string; image?: string; icon?: LucideIcon }[];
 }
 export default function CustomSelect({
   fieldTitle,
@@ -44,7 +45,8 @@ export default function CustomSelect({
                 <SelectItem value={item.id} key={item.id}>
                   <div className="flex items-center gap-x-2">
                     {item.image && <div>ITEM IMAGE</div>}
-                    {item.name}
+                    {item.icon && <item.icon className="size-4 mr-1" />}
+                    {snakeCase(item.name)}
                   </div>
                 </SelectItem>
               ))}
