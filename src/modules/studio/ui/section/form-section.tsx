@@ -74,8 +74,8 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
     };
   });
   const dataForVisibility = [
-    { id: "public", name: "Public", icon: GlobeIcon },
     { id: "private", name: "Private", icon: LockIcon },
+    { id: "public", name: "Public", icon: GlobeIcon },
   ];
   const form = useForm<z.infer<typeof videoUpdateSchema>>({
     resolver: zodResolver(videoUpdateSchema),

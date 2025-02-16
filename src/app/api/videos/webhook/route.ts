@@ -10,6 +10,8 @@ import {
 } from "@mux/mux-node/resources/webhooks";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { UTApi } from "uploadthing/server";
+
 const SINGING_SECRET = process.env.MUX_WEBHOOK_SECRET!;
 
 type WebHookEvent =
@@ -60,10 +62,18 @@ export const POST = async (request: Request) => {
       if (!playbackId) {
         return new Response("No playback id found", { status: 400 });
       }
-      const thumbnail_url = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
-      const preview_url = `https://image.mux.com/${playbackId}/animated.gif`;
+      const temp_thumbnail_url = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+      const temp_preview_url = `https://image.mux.com/${playbackId}/animated.gif`;
       const duration = data.duration ? Math.round(data.duration * 1000) : 0;
-      // console.log({ "DATA WHILE VIDEO ASSET READY": data });
+      const utapi = new UTApi();
+      const [uploadedThumbnail, uploadedPreview] =
+        await utapi.uploadFilesFromUrl([temp_thumbnail_url, temp_preview_url]);
+      if (!uploadedThumbnail.data || !uploadedPreview.data) {
+        return new Response("Error uploading files", { status: 500 });
+      }
+      const { key: thumbnail_key, ufsUrl: thumbnail_url } =
+        uploadedThumbnail.data;
+      const { key: preview_key, ufsUrl: preview_url } = uploadedPreview.data;
       await db
         .update(videos)
         .set({
@@ -72,6 +82,8 @@ export const POST = async (request: Request) => {
           muxAssetId: data.id,
           thumbnailUrl: thumbnail_url,
           previewUrl: preview_url,
+          thumbnailKey: thumbnail_key,
+          previewKey: preview_key,
           duration,
         })
         .where(eq(videos.muxUploadId, data.upload_id));
