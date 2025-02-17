@@ -1,6 +1,7 @@
 import db from "@/db";
 import { videos, videoUpdateSchema } from "@/db/schema/videos";
 import { mux } from "@/lib/mux";
+import { workflow } from "@/lib/workflow";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
@@ -127,5 +128,17 @@ export const videosRouter = createTRPCRouter({
         });
       }
       return updatedVideo;
+    }),
+  generateVideoTitle: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+      const { id: videoId } = input;
+      const { workflowRunId } = await workflow.trigger({
+        url: `${process.env.UPSTASH_WORKFLOW_URL}/api/workflow/title`,
+        body: { userId, videoId },
+        retries: 3,
+      });
+      return workflowRunId;
     }),
 });

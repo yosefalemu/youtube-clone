@@ -9,7 +9,7 @@ import {
 import { Input } from "../ui/input";
 import { cn } from "@/lib/utils";
 import React from "react";
-import { LucideIcon } from "lucide-react";
+import { Loader2Icon, LucideIcon } from "lucide-react";
 
 interface CustomInputProps {
   fieldTitle?: string;
@@ -18,6 +18,8 @@ interface CustomInputProps {
   className?: string;
   maxCharLength?: number;
   LabelIcon?: LucideIcon;
+  onClickIcon?: () => void;
+  isIconLoading?: boolean;
 }
 export default function CustomInput({
   fieldTitle,
@@ -26,6 +28,8 @@ export default function CustomInput({
   className,
   maxCharLength,
   LabelIcon,
+  isIconLoading,
+  onClickIcon,
   ...props
 }: CustomInputProps) {
   const form = useFormContext();
@@ -42,9 +46,16 @@ export default function CustomInput({
         return (
           <FormItem>
             {fieldTitle && (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-x-4">
                 <FormLabel>{fieldTitle}</FormLabel>
-                {LabelIcon && <LabelIcon className="size-4 text-gray-500"/>}
+                {LabelIcon && !isIconLoading ? (
+                  <LabelIcon
+                    className="size-4 text-black/80 hover:text-gray-500 cursor-pointer"
+                    onClick={onClickIcon}
+                  />
+                ) : (
+                  <Loader2Icon className="size-4 animate-spin" />
+                )}
               </div>
             )}
             <FormControl>

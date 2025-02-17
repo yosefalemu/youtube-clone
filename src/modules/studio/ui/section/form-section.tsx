@@ -15,9 +15,9 @@ import {
   ImagePlayIcon,
   Loader2Icon,
   MoreVerticalIcon,
-  Paperclip,
   RotateCcwIcon,
   SparkleIcon,
+  Sparkles,
   TrashIcon,
 } from "lucide-react";
 import { Suspense, useState } from "react";
@@ -43,6 +43,7 @@ import { GlobeIcon, LockIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ThumbnailUploadModal from "../components/thumbnail-upload";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FormSectionProps {
   videoId: string;
@@ -50,13 +51,103 @@ interface FormSectionProps {
 
 export default function FormSection({ videoId }: FormSectionProps) {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
+    <Suspense fallback={<LoadingSection />}>
       <ErrorBoundary fallback={<p>Error</p>}>
         <FormSectionSuspense videoId={videoId} key={videoId} />
       </ErrorBoundary>
     </Suspense>
   );
 }
+
+const LoadingSection = () => {
+  return (
+    <div className="py-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-y-1">
+          <Skeleton className="w-56 h-8" />
+          <Skeleton className="w-56 h-4" />
+        </div>
+        <div className="flex items-center gap-x-1">
+          <Skeleton className="h-14 w-20" />
+          <Skeleton className="h-14 w-4" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="space-y-24 lg:col-span-3">
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-56 h-8" />
+              <Skeleton className="h-8 w-4" />
+            </div>
+            <Skeleton className="h-14 w-full" />
+            <div className="flex justify-end">
+              <Skeleton className="w-14 h-4" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-56 h-8" />
+              <Skeleton className="h-8 w-4" />
+            </div>
+            <Skeleton className="h-[175px] w-full" />
+            <div className="flex justify-end">
+              <Skeleton className="w-14 h-4" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Skeleton className="w-56 h-8" />
+            <Skeleton className="h-[125px] w-1/2" />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-56 h-8" />
+              <Skeleton className="h-8 w-4" />
+            </div>
+            <Skeleton className="h-14 w-full" />
+          </div>
+        </div>
+        <div className="flex flex-col space-y-8 lg:col-span-2">
+          <div className="flex flex-col gap-4 bg-[#F9F9F9] rounded-xl overflow-hidden h-fit">
+            <div className="aspect-video overflow-hidden relative">
+              <Skeleton className="h-[350px] w-full" />
+            </div>
+            <div className="p-4 flex flex-col gap-y-6">
+              <div className="flex justify-between items-center gap-x-2">
+                <div className="flex flex-col gap-y-1">
+                  <Skeleton className="h-4 w-40" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-[300px]" />
+                    <Skeleton className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-y-2">
+                  <Skeleton className="w-36 h-6" />
+                  <Skeleton className="w-20 h-4" />
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-y-2">
+                  <Skeleton className="w-36 h-6" />
+                  <Skeleton className="w-20 h-4" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <div className="flex items-center justify-between">
+              <Skeleton className="w-56 h-8" />
+              <Skeleton className="h-8 w-4" />
+            </div>
+            <Skeleton className="h-14 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
   const utils = trpc.useUtils();
   const router = useRouter();
@@ -66,6 +157,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
   const updateVideo = trpc.video.update.useMutation();
   const deleteVideo = trpc.video.remove.useMutation();
   const restoreThumbnail = trpc.video.restoreThumbnailUrl.useMutation();
+  const generateVideoTitle = trpc.video.generateVideoTitle.useMutation();
 
   const dataForSelect = categories.map((category) => {
     return {
@@ -118,6 +210,25 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
           utils.studio.getMany.invalidate();
           utils.studio.getOne.invalidate({ id: videoId });
           toast.success("Thumbnail restored successfully");
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+        },
+      }
+    );
+  };
+
+  const onGenerateTitle = (videoId: string) => {
+    toast.success("Background job started", {
+      description: "This may take long time.",
+    });
+    generateVideoTitle.mutate(
+      { id: videoId },
+      {
+        onSuccess: () => {
+          utils.studio.getMany.invalidate();
+          utils.studio.getOne.invalidate({ id: videoId });
+          toast.success("Title generated successfully");
         },
         onError: () => {
           toast.error("Something went wrong");
@@ -199,7 +310,9 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 placeHolder="Add a title to your video"
                 maxCharLength={45}
                 className="shadow-none focus:ring-0"
-                LabelIcon={Paperclip}
+                LabelIcon={Sparkles}
+                onClickIcon={() => onGenerateTitle(video.id)}
+                isIconLoading={generateVideoTitle.isPending}
               />
               <CustomTextarea
                 fieldTitle="Video description"
@@ -208,6 +321,7 @@ const FormSectionSuspense = ({ videoId }: FormSectionProps) => {
                 maxCharLength={500}
                 className="shadow-none resize-none"
                 rows={10}
+                LabelIcon={Sparkles}
               />
               {/* TODO::ADD THE THUMBNAIL FIELD */}
               <FormField

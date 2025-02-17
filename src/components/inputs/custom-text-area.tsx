@@ -8,6 +8,7 @@ import {
 } from "../ui/form";
 import { cn } from "@/lib/utils";
 import { Textarea } from "../ui/textarea";
+import { LucideIcon } from "lucide-react";
 
 interface CustomInputProps {
   fieldTitle: string;
@@ -16,6 +17,7 @@ interface CustomInputProps {
   className?: string;
   maxCharLength?: number;
   rows?: number;
+  LabelIcon?: LucideIcon;
 }
 
 export default function CustomTextarea({
@@ -25,6 +27,7 @@ export default function CustomTextarea({
   className,
   maxCharLength,
   rows,
+  LabelIcon,
   ...props
 }: CustomInputProps) {
   const form = useFormContext();
@@ -44,7 +47,15 @@ export default function CustomTextarea({
 
         return (
           <FormItem>
-            <FormLabel htmlFor={fieldTitle}>{fieldTitle}</FormLabel>
+            {fieldTitle && (
+              <div className="flex items-center gap-x-4">
+                <FormLabel>{fieldTitle}</FormLabel>
+                {LabelIcon && (
+                  <LabelIcon className="size-4 text-black/80 hover:text-gray-500 cursor-pointer" />
+                )}
+              </div>
+            )}
+
             <FormControl>
               <Textarea
                 id={nameInSchema}
