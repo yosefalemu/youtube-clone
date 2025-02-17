@@ -56,7 +56,6 @@ export async function POST(req: Request) {
   const eventType = evt.type;
   if (eventType === "user.created") {
     const { data } = evt;
-    console.log("data to create user from clerk");
     await db.insert(users).values({
       clerkId: data.id,
       name: `${data.first_name} ${data.last_name}`,

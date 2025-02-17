@@ -52,27 +52,10 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
-      console.log({ "UPLODED COMPLEDED FIRED": "YES" });
-      const utapi = new UTApi();
-      const [existingVideo] = await db
-        .select()
-        .from(videos)
-        .where(
-          and(
-            eq(videos.id, metadata.videoId),
-            eq(videos.userId, metadata.user.id)
-          )
-        );
-      console.log({ existingVideo });
-      if (!existingVideo) throw new UploadThingError({ code: "NOT_FOUND" });
-      if (!existingVideo.thumbnailKey) {
-        throw new UploadThingError({ code: "BAD_REQUEST" });
-      }
-      await utapi.deleteFiles(existingVideo.thumbnailKey);
-      await db
+      const [updatedVideo] = await db
         .update(videos)
         .set({
-          thumbnailUrl: file.ufsUrl,
+          thumbnailUrl: file.url,
           thumbnailKey: file.key,
         })
         .where(
@@ -82,9 +65,9 @@ export const ourFileRouter = {
           )
         )
         .returning();
-
-      console.log("file url", file.ufsUrl);
-
+      if (!updatedVideo) {
+        throw new UploadThingError({ code: "NOT_FOUND" });
+      }
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.user.id };
     }),

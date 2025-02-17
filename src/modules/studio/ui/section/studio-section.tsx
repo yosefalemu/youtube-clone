@@ -89,7 +89,6 @@ const StudioSectionSuspense = () => {
     { limit: 5 },
     { getNextPageParam: (lastPage) => lastPage.nextCursor }
   );
-  console.log({ videos });
   return (
     <div>
       <div className="border-y">
@@ -135,7 +134,7 @@ const StudioSectionSuspense = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center">
+                      <div className="flex items-center text-blue-500">
                         {video.visibility === "private" ? (
                           <LockIcon className="size-4 mr-2" />
                         ) : (

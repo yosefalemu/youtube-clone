@@ -9,7 +9,6 @@ import {
   VideoAssetTrackReadyWebhookEvent,
 } from "@mux/mux-node/resources/webhooks";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
 import { UTApi } from "uploadthing/server";
 
 const SINGING_SECRET = process.env.MUX_WEBHOOK_SECRET!;
@@ -23,18 +22,28 @@ type WebHookEvent =
 
 export const POST = async (request: Request) => {
   if (!SINGING_SECRET) {
-    throw new Error("No secret found");
+    return new Error("No secret found");
   }
-  const headerPayload = await headers();
-  const muxSignature = headerPayload.get("mux-signature");
-  if (!muxSignature) {
-    throw new Response("No signature found", { status: 401 });
+
+  const signature = request.headers.get("mux-signature");
+  if (!signature) {
+    return new Response("No signature found", { status: 401 });
   }
-  const payload = await request.json();
+  let payload;
+  try {
+    const textBody = await request.text();
+    if (!textBody) {
+      return new Response("Empty body", { status: 400 });
+    }
+    payload = JSON.parse(textBody);
+  } catch (error) {
+    console.log({ error });
+    return new Response("Invalid json body", { status: 400 });
+  }
   const body = JSON.stringify(payload);
   mux.webhooks.verifySignature(
     body,
-    { "mux-signature": muxSignature },
+    { "mux-signature": signature },
     SINGING_SECRET
   );
   switch (payload.type as WebHookEvent["type"]) {
@@ -43,7 +52,6 @@ export const POST = async (request: Request) => {
       if (!data.upload_id) {
         return new Response("No upload id found", { status: 400 });
       }
-      // console.log({ "DATA WHILE VIDEO CREATED": data });
       await db
         .update(videos)
         .set({
@@ -62,18 +70,35 @@ export const POST = async (request: Request) => {
       if (!playbackId) {
         return new Response("No playback id found", { status: 400 });
       }
+
+      // Check if this video has already been processed
+      const existingVideo = await db
+        .select({ muxPlaybackId: videos.muxPlaybackId })
+        .from(videos)
+        .where(eq(videos.muxUploadId, data.upload_id));
+
+      if (existingVideo.length > 0 && existingVideo[0].muxPlaybackId) {
+        return new Response("Duplicate event ignored", { status: 200 });
+      }
+
+      // Generate preview and thumbnail URLs
       const temp_thumbnail_url = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
       const temp_preview_url = `https://image.mux.com/${playbackId}/animated.gif`;
       const duration = data.duration ? Math.round(data.duration * 1000) : 0;
+
+      // Upload images only once
       const utapi = new UTApi();
       const [uploadedThumbnail, uploadedPreview] =
         await utapi.uploadFilesFromUrl([temp_thumbnail_url, temp_preview_url]);
+
       if (!uploadedThumbnail.data || !uploadedPreview.data) {
         return new Response("Error uploading files", { status: 500 });
       }
-      const { key: thumbnail_key, ufsUrl: thumbnail_url } =
-        uploadedThumbnail.data;
-      const { key: preview_key, ufsUrl: preview_url } = uploadedPreview.data;
+
+      const { key: thumbnail_key, url: thumbnail_url } = uploadedThumbnail.data;
+      const { key: preview_key, url: preview_url } = uploadedPreview.data;
+
+      // Update the database
       await db
         .update(videos)
         .set({
@@ -87,6 +112,8 @@ export const POST = async (request: Request) => {
           duration,
         })
         .where(eq(videos.muxUploadId, data.upload_id));
+
+      break;
     }
     case "video.asset.errored": {
       const data = payload.data as VideoAssetDeletedWebhookEvent["data"];
@@ -106,7 +133,15 @@ export const POST = async (request: Request) => {
       if (!data.upload_id) {
         return new Response("No upload id found", { status: 400 });
       }
-      // console.log({ "DATA WHILE DELETE VIDEO": data });
+      const utapi = new UTApi();
+      const [existingVideo] = await db
+        .select({ thumbnailKey: videos.thumbnailKey })
+        .from(videos)
+        .where(eq(videos.muxUploadId, data.upload_id));
+      if (!existingVideo.thumbnailKey) {
+        return new Response("No thumbnail key found", { status: 400 });
+      }
+      await utapi.deleteFiles(existingVideo.thumbnailKey);
       await db.delete(videos).where(eq(videos.muxUploadId, data.upload_id));
       break;
     }
@@ -121,7 +156,6 @@ export const POST = async (request: Request) => {
       if (!assetId) {
         return new Response("No asset id found", { status: 400 });
       }
-      console.log("DATA WHILE FETCHING TRACK READY", data);
       await db
         .update(videos)
         .set({ muxTrackId: trackId, muxTrackStatus: status })

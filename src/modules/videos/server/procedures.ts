@@ -85,37 +85,42 @@ export const videosRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id: userId } = ctx.user;
       const { id } = input;
+      const utapi = new UTApi();
       const [existingVideo] = await db
         .select()
         .from(videos)
         .where(and(eq(videos.id, id), eq(videos.userId, userId)));
-      if (!existingVideo) {
+      if (
+        !existingVideo ||
+        !existingVideo.muxPlaybackId ||
+        !existingVideo.thumbnailKey
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
         });
       }
-      if (!existingVideo.muxPlaybackId) {
+      const temp_thumbnail_url = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
+      const uploadedThumbnail = await utapi.uploadFilesFromUrl(
+        temp_thumbnail_url
+      );
+      if (!uploadedThumbnail.data) {
         throw new TRPCError({
           code: "BAD_REQUEST",
         });
       }
-      if (!existingVideo.thumbnailKey) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
+      const { url: thumbnail_url } = uploadedThumbnail.data;
+      if (existingVideo.thumbnailKey) {
+        await utapi.deleteFiles(existingVideo.thumbnailKey);
       }
-      const utapi = new UTApi();
-      await utapi.deleteFiles(existingVideo.thumbnailKey);
-      const thumbnail_url = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
-      const preview_url = `https://image.mux.com/${existingVideo.muxPlaybackId}/animated.gif`;
       const [updatedVideo] = await db
         .update(videos)
         .set({
           thumbnailUrl: thumbnail_url,
           thumbnailKey: null,
-          previewUrl: preview_url,
-          previewKey: null,
         })
         .where(and(eq(videos.id, id), eq(videos.userId, userId)))
         .returning();
+
       if (!updatedVideo) {
         throw new TRPCError({
           code: "BAD_REQUEST",
