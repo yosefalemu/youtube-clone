@@ -1,104 +1,31 @@
-// import HomeNavbar from "@/modules/home/ui/components/home-navbar";
-// import { render, screen } from "@testing-library/react";
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import TestUi from "./test-ui";
 
-let data: number[] = [];
-beforeAll(() => {
-  console.log("Before all test cases");
-  data = [1, 2, 3, 4, 5];
-});
-function sum(a: number, b: number) {
-  return a + b;
-}
-
-function subtract(a: number, b: number) {
-  return a - b;
-}
-
-function division(a: number, b: number) {
-  return a - b;
-}
-function multiplication(a: number, b: number) {
-  return a * b;
-}
-
-test("adds 1 + 2 to equal 3", () => {
-  console.log(data);
-  expect(sum(2, 3)).toBe(5);
-  expect(sum(1, 2)).toBe(3);
-  expect(sum(2, 2)).not.toBe(5);
-  expect(sum(1, 2)).not.toBe(4);
-  expect(sum(1, 2)).not.toBe(5);
-});
-
-test("subtracts 2 - 1 to equal 1", () => {
-  console.log(data);
-  expect(subtract(2, 1)).toBe(1);
-  expect(subtract(2, 1)).not.toBe(6);
-});
-
-test("division of to numbers", () => {
-  console.log(data);
-  expect(division(2, 1)).toBe(2);
-  expect(division(2, 1)).not.toBe(6);
-});
-
-test("multiplication tes", () => {
-  console.log(data);
-  expect(multiplication(2, 3)).toBe(6);
-  expect(multiplication(2, 3)).not.toBe(7);
-});
-
-type DataType = {
-  label: string;
-  value: number;
-};
-test("object-assignment", () => {
-  const data: DataType[] = [
-    { label: "A", value: 1 },
-    { label: "B", value: 2 },
-    { label: "C", value: 3 },
-  ];
-  const newData = data.map((d) => ({ ...d, value: d.value + 1 }));
-  expect(newData).toEqual([
-    { label: "A", value: 2 },
-    { label: "B", value: 3 },
-    { label: "C", value: 4 },
-  ]);
-});
-
-type FetchDataResponse = {
-  value: string;
-};
-async function fetchData(): Promise<FetchDataResponse> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ value: "Hello World" });
-    }, 2000);
+describe("test-fc1", () => {
+  beforeEach(() => {
+    render(<TestUi />);
   });
-}
 
-test("fetch-data", async () => {
-  const data = await fetchData();
-  expect(data.value).toEqual("Hello World");
-  expect(data).not.toEqual({ value: "Hello" });
-});
-
-describe("combined-test-cases", () => {
-  test("get-response", async () => {
-    const data = await fetchData();
-    expect(data).toMatchObject({ value: "Hello World" });
+  it("render the h1 tag", () => {
+    const text = screen.getByRole("heading", { level: 1 });
+    expect(text).toBeInTheDocument();
   });
-  test("destract-object", async () => {
-    const data = await fetchData();
-    const { value } = data;
-    expect(value).toEqual("Hello World");
+
+  it("render the description of the page", () => {
+    const text = screen.getByText(/Hello World/i);
+    expect(text).toBeInTheDocument();
   });
 });
 
-// describe("user-avatar", () => {
-//   it("it should render user avatar", () => {
-//     render(<HomeNavbar />);
-//     const text = screen.getByText(/You tube/i);
-//     expect(text).toBeInTheDocument();
-//   });
-// });
+describe("test-fc2", () => {
+  beforeEach(() => {
+    render(<TestUi />);
+  });
+
+  it("render h2 tag", () => {
+    const text = screen.getByRole("heading", { level: 2 });
+    expect(text).toBeInTheDocument();
+  });
+});
