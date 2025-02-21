@@ -1,22 +1,23 @@
-import type { Config } from "jest";
-import nextJest from "next/jest.js";
-
-const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
-  dir: "./",
-});
-
-// Add any custom config to be passed to Jest
-const config: Config = {
-  clearMocks: true,
+/* eslint-disable import/no-commonjs */
+/** @type {import('@ts-jest/dist/types').InitialOptionsTsJest} */
+module.exports = {
+  preset: "ts-jest/presets/js-with-ts",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  "transformIgnorePatterns": [
+      "node_modules/(?!variables/.*)"
+  ],
+  testPathIgnorePatterns: ["<rootDir>/dist/", "node_modules"],
+  moduleDirectories: ["node_modules", "<rootdir>/src/"],
+  setupFiles: ['dotenv/config'],
   collectCoverage: true,
   coverageDirectory: "coverage",
-  coverageProvider: "v8",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
-  testEnvironment: "jsdom",
-  // Add more setup options before each test is run
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  extensionsToTreatAsEsm: ['.ts'],
+  "moduleNameMapper": {
+      "/src/(.*)": "<rootDir>/src/$1",
+      '^utils(.*)$': '<rootDir>/src/utils$1',
+  },
+  "transform": {
+      "node_modules/variables/.+\\.(j|t)sx?$": "ts-jest"
+  },
 };
-
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config);
