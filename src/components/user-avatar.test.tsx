@@ -14,6 +14,10 @@ function subtract(a: number, b: number) {
   return a - b;
 }
 
+function division(a: number, b: number) {
+  return a - b;
+}
+
 test("adds 1 + 2 to equal 3", () => {
   console.log(data);
   expect(sum(2, 3)).toBe(5);
@@ -27,6 +31,12 @@ test("subtracts 2 - 1 to equal 1", () => {
   console.log(data);
   expect(subtract(2, 1)).toBe(1);
   expect(subtract(2, 1)).not.toBe(6);
+});
+
+test("division of to numbers", () => {
+  console.log(data);
+  expect(division(2, 1)).toBe(2);
+  expectdivision(2, 1)).not.toBe(6);
 });
 
 type DataType = {
