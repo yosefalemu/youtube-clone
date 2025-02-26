@@ -10,7 +10,12 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test-ui": "bunx jest test-ui.test.tsx",
+    "test-navbar": "bunx jest home-navbar.test.tsx",
+    "test-homepage": "bunx jest homepage.test.tsx",
+    "test-studiopage": "bunx jest studiopage.test.tsx",
+    "test-videopage": "bunx jest videoview.test.tsx"
   },
   "dependencies": {
     "@babel/core": "^7.26.9",
@@ -110,9 +115,10 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "next-router-mock": "^0.9.13",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5",

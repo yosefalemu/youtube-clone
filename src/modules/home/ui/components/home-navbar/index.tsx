@@ -2,8 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import SearchInput from "./search-input";
-import AuthButton from "@/modules/auth/ui/auth-button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+
 
 export default function HomeNavbar() {
   return (
@@ -22,7 +22,7 @@ export default function HomeNavbar() {
           <SearchInput />
         </div>
         <div className="flex-shrink-0 items-center flex gap-4">
-          <AuthButton />
+          Test
         </div>
       </div>
     </nav>
