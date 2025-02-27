@@ -15,7 +15,9 @@
     "test-navbar": "bunx jest home-navbar.test.tsx",
     "test-homepage": "bunx jest homepage.test.tsx",
     "test-studiopage": "bunx jest studiopage.test.tsx",
-    "test-videopage": "bunx jest videoview.test.tsx"
+    "test-videopage": "bunx jest videoview.test.tsx",
+    "test-studio-layout": "bunx jest studiolayout.test.tsx",
+    "test-studio-navbar": "bunx jest studio-navbar.test.tsx"
   },
   "dependencies": {
     "@babel/core": "^7.26.9",
